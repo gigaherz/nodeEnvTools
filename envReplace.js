@@ -26,44 +26,46 @@
  *
  */
 
-var envReplace = (function() {
+var envReplace = (function () {
   var pattern = /(\%([a-z0-9_()]*)\%)|([^\%]+)/gi;
-
+  
   function findInsensitive(obj, key) {
-    var what = key.toLowerCase();
-    for(var k in obj) {
-      if(k.toLowerCase() === what)
+    var finder = new RegExp('^' + key + '$', 'i');
+    finder.compile();
+    for (var k in obj) {
+      if (finder.test(k)) {
         return obj[k];
+      }
     }
     return undefined;
   }
-
+  
   function envReplace(input) {
     var output = '';
-
+    
     // reset the regex
     pattern.lastIndex = 0;
-
+    
     var res = pattern.exec(input);
     while (res !== null) {
-      if(res[0] === '%%') {
+      if (res[0] === '%%') {
         output += '%';
       } else if (res[0].charAt(0) === '%') {
         var match = res[2];
-
+        
         output += findInsensitive(process.env, match);
       } else {
         output += res[0];
       }
-
+      
       res = pattern.exec(input);
     }
-
+    
     return output;
   }
-
+  
   return envReplace;
 })();
 
-if(module)
+if (module)
   module.exports = envReplace;
