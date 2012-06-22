@@ -32,7 +32,7 @@ var envReplace = (function() {
   function findInsensitive(obj, key) {
     var what = key.toLowerCase();
     for(var k in obj) {
-      if(obj.hasOwnProperty(k) && k.toLowerCase() === what)
+      if(k.toLowerCase() === what)
         return obj[k];
     }
     return undefined;
