@@ -27,43 +27,54 @@
  */
 
 var envReplace = (function () {
-  var pattern = /(\%([a-z0-9_()]*)\%)|([^\%]+)/gi;
-  
-  function findInsensitive(obj, key) {
-    var finder = new RegExp('^' + key + '$', 'i');
-    finder.compile();
+  var pattern = /%([a-z0-9_()]*)%/gi;
+
+  function findInsensitive(obj, key, cache) {
+    key=key.toLowerCase();
+    
+    if(cache.hasOwnProperty(key))
+      return cache[key] || undefined;
+    
     for (var k in obj) {
-      if (finder.test(k)) {
-        return obj[k];
+      if (k.toLowerCase() === key) {
+        var value = obj[k];
+        cache[key] = value;
+        return value;
       }
     }
+    
+    cache[key]=false;
     return undefined;
   }
-  
+    
   function envReplace(input) {
-    var output = '';
-    
-    // reset the regex
+    var output = '', last=0, env=process.env;
+    var cache = {};
+
     pattern.lastIndex = 0;
-    
+
     var res = pattern.exec(input);
     while (res !== null) {
-      if (res[0] === '%%') {
-        output += '%';
-      } else if (res[0].charAt(0) === '%') {
-        var match = res[2];
-        
-        output += findInsensitive(process.env, match);
-      } else {
-        output += res[0];
+      var idx = res.index;
+
+      if(idx > last) {
+        output += input.substring(last,idx);
       }
-      
+
+      var match = res[1];
+      output += match ? findInsensitive(env, match, cache) : '%';
+
+      last = idx + res[0].length;
       res = pattern.exec(input);
     }
-    
+
+    if(last < input.length) {
+      output += input.substring(last);
+    }
+
     return output;
   }
-  
+
   return envReplace;
 })();
 
